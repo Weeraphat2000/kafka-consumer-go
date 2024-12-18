@@ -81,7 +81,10 @@ func main() {
 	}
 
 	// วน loop ใน map ของ topicHandlers เพื่อสร้าง goroutine consumer แต่ละ topic แยกกัน
+	// สร้าง Consumer ให้แต่ละ Topic: ใน topicHandlers เป็นการจับคู่ว่าชื่อ topic ไหนจะใช้ handler function ไหนสำหรับประมวลผลข้อความจาก topic นั้น ๆ การวนลูปจะทำให้เราสามารถดึงข้อมูล topic และ handler ที่สอดคล้องกันเพื่อสร้าง consumer สำหรับ topic นั้น ๆ ได้อย่างอัตโนมัติ
 	for topic, handler := range topicHandlers {
+		// การทำงานแบบขนาน (Concurrency): การอ่านข้อความจากแต่ละ topic สามารถทำพร้อม ๆ กันได้ หากเราไม่ใช้ goroutine ทุก ๆ topic จะต้องรอให้ topic ก่อนหน้าทำเสร็จก่อนถึงจะอ่านได้ ทำให้ประสิทธิภาพลดลง
+		// แยกการทำงานอิสระ: การให้แต่ละ topic มี goroutine ของตนเอง ทำให้หากมีปัญหาเกิดขึ้นกับ topic ใด topic หนึ่ง จะไม่ส่งผลกระทบให้การอ่านของ topic อื่นต้องหยุด
 		go func(t string, h func(msg kafka.Message)) {
 			// เรียก consumeTopic สำหรับ topic นั้น ๆ
 			consumeTopic(ctx, broker, t, groupID, h)
